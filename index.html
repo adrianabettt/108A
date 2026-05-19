@@ -73,7 +73,6 @@
             to { transform: translateY(-10px); }
         }
         
-        /* ALTERADO: Exibe os botões em linha (horizontal) */
         .opcoes {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -107,7 +106,6 @@
         .sucesso { color: #10B981; }
         .erro { color: #EF4444; }
         
-        /* Painel de Alerta de Nota Final */
         .alerta-final {
             background-color: #EEF2FF;
             border: 5px dashed #6366F1;
@@ -138,7 +136,6 @@
             text-align: center;
         }
 
-        /* Responsividade para telas muito pequenas */
         @media (max-width: 400px) {
             .opcoes {
                 grid-template-columns: 1fr;
@@ -172,52 +169,41 @@
     </footer>
 
     <script>
-        const desafios = [
-            {
-                icone: "🛑",
-                pergunta: "A PLACA DE PARE AVISA QUE O CARRO DEVE:",
-                opcoes: ["PARAR", "CORRER", "BUZINAR"],
-                correta: 0
-            },
-            {
-                icone: "😢",
-                pergunta: "ESTE ROSTINHO AVISA QUE A PESSOA ESTÁ:",
-                opcoes: ["TRISTE", "FELIZ", "COM FOME"],
-                correta: 0
-            },
-            {
-                icone: "🔔",
-                pergunta: "O SINAL DA ESCOLA AVISA QUE É HORA DO:",
-                opcoes: ["RECREIO", "ALMOÇO", "BANHO"],
-                correta: 0
-            },
-            {
-                icone: "🔋",
-                pergunta: "A BATERIA VERDE DIZ QUE O CELULAR ESTÁ:",
-                opcoes: ["CHEIO", "ESTRAGADO", "SEM INTERNET"],
-                correta: 0
-            },
-            {
-                icone: "🚨",
-                pergunta: "A LUZ DA AMBULÂNCIA AVISA QUE ELA TEM:",
-                opcoes: ["PRESSA", "SONO", "FOME"],
-                correta: 0
-            }
+        // Banco completo com 10 desafios pedagógicos
+        const bancoDeDesafios = [
+            { icone: "🛑", pergunta: "A PLACA DE PARE AVISA QUE O CARRO DEVE:", opcoes: ["PARAR", "CORRER", "BUZINAR"], correta: 0 },
+            { icone: "😢", pergunta: "ESTE ROSTINHO AVISA QUE A PESSOA ESTÁ:", opcoes: ["TRISTE", "FELIZ", "COM FOME"], correta: 0 },
+            { icone: "🔔", pergunta: "O SINAL DA ESCOLA AVISA QUE É HORA DO:", opcoes: ["RECREIO", "ALMOÇO", "BANHO"], correta: 0 },
+            { icone: "🔋", pergunta: "A BATERIA VERDE DIZ QUE O CELULAR ESTÁ:", opcoes: ["CHEIO", "ESTRAGADO", "SEM INTERNET"], correta: 0 },
+            { icone: "🚨", pergunta: "A LUZ DA AMBULÂNCIA AVISA QUE ELA TEM:", opcoes: ["PRESSA", "SONO", "FOME"], correta: 0 },
+            { icone: "🦓", pergunta: "A FAIXA PINTADA NA RUA DIZ QUE É O LUGAR DE:", opcoes: ["ANDAR", "CORRER", "ATRAVESSAR"], correta: 2 },
+            { icone: "🌧️", pergunta: "AS NUVENS ESCURAS NO CÉU AVISAM QUE VAI:", opcoes: ["CHOVER", "ENSOLARAR", "VENTAR"], correta: 0 },
+            { icone: "🤫", pergunta: "ESTE ROSTINHO PEDE PARA A GENTE FAZER:", opcoes: ["SILÊNCIO", "BARULHO", "FESTA"], correta: 0 },
+            { icone: "🛝", pergunta: "ESTA PLACA NO PARQUINHO DIZ QUE ALI TEM UM:", opcoes: ["ESCORREGADOR", "BALANÇO", "CAMPINHO"], correta: 0 },
+            { icone: "🍦", pergunta: "ESTE DESENHO NA PORTA DA LOJA AVISA QUE LÁ VENDE:", opcoes: ["SORVETE", "PASTEL", "BRINQUEDO"], correta: 0 }
         ];
 
+        let desafiosSorteados = [];
         let faseAtual = 0;
         let acertos = 0;
-        let indiceCorretoAtual = 0; // Armazena o novo índice da resposta correta após o embaralhamento
+        let indiceCorretoAtual = 0;
+
+        // Escolhe 5 itens do banco de forma totalmente aleatória
+        function iniciarJogo() {
+            const bancoEmbaralhado = [...bancoDeDesafios].sort(() => Math.random() - 0.5);
+            desafiosSorteados = bancoEmbaralhado.slice(0, 5);
+            carregarDesafio();
+        }
 
         function carregarDesafio() {
-            if (faseAtual >= desafios.length) {
+            if (faseAtual >= desafiosSorteados.length) {
                 mostrarNotaFinal();
                 return;
             }
 
-            document.getElementById('progresso').innerText = `FASE ${faseAtual + 1} DE ${desafios.length}`;
+            document.getElementById('progresso').innerText = `FASE ${faseAtual + 1} DE ${desafiosSorteados.length}`;
 
-            const dados = desafios[faseAtual];
+            const dados = desafiosSorteados[faseAtual];
             document.getElementById('pergunta').innerText = dados.pergunta;
             document.getElementById('icone').innerText = dados.icone;
             
@@ -225,23 +211,20 @@
             containerBotoes.innerHTML = '';
             document.getElementById('feedback').innerText = '';
 
-            // NOVO: Mapeia as opções com seus índices originais para não perder a resposta certa
+            // Mapeia e gera a ordem aleatória das respostas do desafio atual
             let opcoesEmbaralhadas = dados.opcoes.map((opcao, index) => {
                 return { texto: opcao, originalIndex: index };
             });
 
-            // NOVO: Algoritmo para embaralhar as alternativas de forma aleatória
             for (let i = opcoesEmbaralhadas.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [opcoesEmbaralhadas[i], opcoesEmbaralhadas[j]] = [opcoesEmbaralhadas[j], opcoesEmbaralhadas[i]];
             }
 
-            // Cria os botões com a ordem nova (aleatória)
             opcoesEmbaralhadas.forEach((opcaoObjeto, index) => {
                 const botao = document.createElement('button');
                 botao.innerText = opcaoObjeto.texto;
                 
-                // Se o índice original desse botão for o índice correto, salvamos a nova posição dele
                 if (opcaoObjeto.originalIndex === dados.correta) {
                     indiceCorretoAtual = index;
                 }
@@ -253,11 +236,9 @@
 
         function verificarResposta(indiceSelecionado) {
             const feedback = document.getElementById('feedback');
-            
             const botoes = document.querySelectorAll('.opcoes button');
             botoes.forEach(b => b.disabled = true);
 
-            // ALTERADO: Compara com o índice correto atualizado
             if (indiceSelecionado === indiceCorretoAtual) {
                 acertos++;
                 feedback.className = "resultado sucesso";
@@ -274,7 +255,7 @@
         }
 
         function mostrarNotaFinal() {
-            const nota = (acertos / desafios.length) * 10;
+            const nota = (acertos / desafiosSorteados.length) * 10;
             const jogoContainer = document.getElementById('jogo');
             
             let mensagemMensagem = "";
@@ -306,7 +287,8 @@
             window.location.reload();
         }
 
-        carregarDesafio();
+        // Inicializa o sorteio automático ao carregar
+        iniciarJogo();
     </script>
 </body>
 </html>
