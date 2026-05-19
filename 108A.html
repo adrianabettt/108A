@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JOGO DOS DETETIVES DA INFORMAÇÃO</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #F0FDF4;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        header {
+            background-color: #FF8000;
+            color: white;
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 {
+            font-size: 24px;
+            letter-spacing: 1px;
+        }
+        .container {
+            background-color: white;
+            width: 100%;
+            max-width: 600px;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            text-align: center;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .placar-progresso {
+            font-size: 16px;
+            font-weight: bold;
+            color: #666;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+        }
+        .instrucao {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 25px;
+            color: #1E3A8A;
+            min-height: 60px;
+            line-height: 1.4;
+        }
+        .elemento-informacao {
+            font-size: 100px;
+            margin-bottom: 30px;
+            animation: bounce 1s infinite alternate;
+        }
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-10px); }
+        }
+        .opcoes {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+        button {
+            background-color: #3B82F6;
+            color: white;
+            border: none;
+            padding: 20px;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.2s;
+            box-shadow: 0 4px 0px #1D4ED8;
+        }
+        button:active {
+            background-color: #1D4ED8;
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+        .resultado {
+            margin-top: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            min-height: 35px;
+        }
+        .sucesso { color: #10B981; }
+        .erro { color: #EF4444; }
+        
+        /* Painel de Alerta de Nota Final */
+        .alerta-final {
+            background-color: #EEF2FF;
+            border: 5px dashed #6366F1;
+            padding: 35px;
+            border-radius: 16px;
+            animation: fadeIn 0.5s ease-out;
+        }
+        .nota-box {
+            font-size: 64px;
+            font-weight: 900;
+            color: #4F46E5;
+            margin: 20px 0;
+            background: #FFF;
+            display: inline-block;
+            padding: 15px 40px;
+            border-radius: 50px;
+            box-shadow: 0 6px 6px rgba(0,0,0,0.1);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        footer {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🔍 DETETIVES DA INFORMAÇÃO 🔍</h1>
+    </header>
+
+    <div class="container">
+        <div id="jogo">
+            <div class="placar-progresso" id="progresso">FASE 1 DE 5</div>
+            <p class="instrucao" id="pergunta">CARREGANDO...</p>
+            <div class="elemento-informacao" id="icone">❓</div>
+            
+            <div class="opcoes" id="botoes-container"></div>
+            
+            <div class="resultado" id="feedback"></div>
+        </div>
+    </div>
+
+    <footer>
+        Material Pedagógico – Profª Adriana Bett Terebinto © 2026
+    </footer>
+
+    <script>
+        const desafios = [
+            {
+                icone: "🛑",
+                pergunta: "A PLACA DE PARE AVISA QUE O CARRO DEVE:",
+                opcoes: ["PARAR", "CORRER", "BUZINAR"],
+                correta: 0
+            },
+            {
+                icone: "😢",
+                pergunta: "ESTE ROSTINHO AVISA QUE A PESSOA ESTÁ:",
+                opcoes: ["TRISTE", "FELIZ", "COM FOME"],
+                correta: 0
+            },
+            {
+                icone: "🔔",
+                pergunta: "O SINAL DA ESCOLA AVISA QUE É HORA DO:",
+                opcoes: ["RECREIO", "ALMOÇO", "BANHO"],
+                correta: 0
+            },
+            {
+                icone: "🔋",
+                pergunta: "A BATERIA VERDE DIZ QUE O CELULAR ESTÁ:",
+                opcoes: ["CHEIO", "ESTRAGADO", "SEM INTERNET"],
+                correta: 0
+            },
+            {
+                icone: "🚨",
+                pergunta: "A LUZ DA AMBULÂNCIA AVISA QUE ELA TEM:",
+                opcoes: ["PRESSA", "SONO", "FOME"],
+                correta: 0
+            }
+        ];
+
+        let faseAtual = 0;
+        let acertos = 0;
+
+        function carregarDesafio() {
+            if (faseAtual >= desafios.length) {
+                mostrarNotaFinal();
+                return;
+            }
+
+            document.getElementById('progresso').innerText = `FASE ${faseAtual + 1} DE ${desafios.length}`;
+
+            const dados = desafios[faseAtual];
+            document.getElementById('pergunta').innerText = dados.pergunta;
+            document.getElementById('icone').innerText = dados.icone;
+            
+            const containerBotoes = document.getElementById('botoes-container');
+            containerBotoes.innerHTML = '';
+            document.getElementById('feedback').innerText = '';
+
+            dados.opcoes.forEach((opcao, index) => {
+                const botao = document.createElement('button');
+                botao.innerText = opcao;
+                botao.onclick = () => verificarResposta(index);
+                containerBotoes.appendChild(botao);
+            });
+        }
+
+        function verificarResposta(indiceSelecionado) {
+            const dados = desafios[faseAtual];
+            const feedback = document.getElementById('feedback');
+            
+            const botoes = document.querySelectorAll('.opcoes button');
+            botoes.forEach(b => b.disabled = true);
+
+            if (indiceSelecionado === dados.correta) {
+                acertos++;
+                feedback.className = "resultado sucesso";
+                feedback.innerText = "🌟 PARABÉNS! VOCÊ ACERTOU! 🌟";
+            } else {
+                feedback.className = "resultado erro";
+                feedback.innerText = "❌ QUASE! OLHE BEM PARA O SINAL.";
+            }
+
+            setTimeout(() => {
+                faseAtual++;
+                carregarDesafio();
+            }, 2000);
+        }
+
+        function mostrarNotaFinal() {
+            const nota = (acertos / desafios.length) * 10;
+            const jogoContainer = document.getElementById('jogo');
+            
+            let mensagemMensagem = "";
+            let corAlerta = "#6366F1";
+
+            if(nota >= 8) {
+                mensagemMensagem = "🎉 PARABÉNS, DETETIVE! VOCÊ ENTENDE TUDO! 🎉";
+                corAlerta = "#10B981";
+            } else if(nota >= 5) {
+                mensagemMensagem = "👍 MUITO BEM! VOCÊ ACERTOU MUITO! 👍";
+                corAlerta = "#F59E0B";
+            } else {
+                mensagemMensagem = "💪 BOM TREINO! VAMOS TENTAR DE NOVO? 💪";
+                corAlerta = "#EF4444";
+            }
+
+            jogoContainer.innerHTML = `
+                <div class="alerta-final" style="border-color: ${corAlerta};">
+                    <p class="instrucao" style="color: ${corAlerta}; font-size: 26px; margin-bottom: 10px;">FIM DO DESAFIO!</p>
+                    <p style="font-size: 20px; font-weight: bold; color: #4B5563;">SUA NOTA FOI:</p>
+                    <div class="nota-box" style="color: ${corAlerta};">${nota.toFixed(0)}</div>
+                    <p style="font-size: 18px; margin-top: 10px; font-weight: bold; color: #374151;">${mensagemMensagem}</p>
+                    <button onclick="reiniciarJogo()" style="margin-top: 25px; background-color: ${corAlerta}; box-shadow: none;">JOGAR DE NOVO</button>
+                </div>
+            `;
+        }
+
+        function reiniciarJogo() {
+            window.location.reload();
+        }
+
+        carregarDesafio();
+    </script>
+</body>
+</html>
