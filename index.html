@@ -72,22 +72,26 @@
             from { transform: translateY(0); }
             to { transform: translateY(-10px); }
         }
+        
+        /* ALTERADO: Exibe os botões em linha (horizontal) */
         .opcoes {
             display: grid;
-            grid-template-columns: 1fr;
+            grid-template-columns: repeat(3, 1fr);
             gap: 15px;
         }
+        
         button {
             background-color: #3B82F6;
             color: white;
             border: none;
-            padding: 20px;
-            font-size: 20px;
+            padding: 20px 10px;
+            font-size: 18px;
             font-weight: bold;
             border-radius: 10px;
             cursor: pointer;
             transition: background 0.2s;
             box-shadow: 0 4px 0px #1D4ED8;
+            width: 100%;
         }
         button:active {
             background-color: #1D4ED8;
@@ -132,6 +136,16 @@
             font-size: 12px;
             color: #666;
             text-align: center;
+        }
+
+        /* Responsividade para telas muito pequenas */
+        @media (max-width: 400px) {
+            .opcoes {
+                grid-template-columns: 1fr;
+            }
+            button {
+                padding: 15px;
+            }
         }
     </style>
 </head>
@@ -193,6 +207,7 @@
 
         let faseAtual = 0;
         let acertos = 0;
+        let indiceCorretoAtual = 0; // Armazena o novo índice da resposta correta após o embaralhamento
 
         function carregarDesafio() {
             if (faseAtual >= desafios.length) {
@@ -210,22 +225,40 @@
             containerBotoes.innerHTML = '';
             document.getElementById('feedback').innerText = '';
 
-            dados.opcoes.forEach((opcao, index) => {
+            // NOVO: Mapeia as opções com seus índices originais para não perder a resposta certa
+            let opcoesEmbaralhadas = dados.opcoes.map((opcao, index) => {
+                return { texto: opcao, originalIndex: index };
+            });
+
+            // NOVO: Algoritmo para embaralhar as alternativas de forma aleatória
+            for (let i = opcoesEmbaralhadas.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [opcoesEmbaralhadas[i], opcoesEmbaralhadas[j]] = [opcoesEmbaralhadas[j], opcoesEmbaralhadas[i]];
+            }
+
+            // Cria os botões com a ordem nova (aleatória)
+            opcoesEmbaralhadas.forEach((opcaoObjeto, index) => {
                 const botao = document.createElement('button');
-                botao.innerText = opcao;
+                botao.innerText = opcaoObjeto.texto;
+                
+                // Se o índice original desse botão for o índice correto, salvamos a nova posição dele
+                if (opcaoObjeto.originalIndex === dados.correta) {
+                    indiceCorretoAtual = index;
+                }
+
                 botao.onclick = () => verificarResposta(index);
                 containerBotoes.appendChild(botao);
             });
         }
 
         function verificarResposta(indiceSelecionado) {
-            const dados = desafios[faseAtual];
             const feedback = document.getElementById('feedback');
             
             const botoes = document.querySelectorAll('.opcoes button');
             botoes.forEach(b => b.disabled = true);
 
-            if (indiceSelecionado === dados.correta) {
+            // ALTERADO: Compara com o índice correto atualizado
+            if (indiceSelecionado === indiceCorretoAtual) {
                 acertos++;
                 feedback.className = "resultado sucesso";
                 feedback.innerText = "🌟 PARABÉNS! VOCÊ ACERTOU! 🌟";
